@@ -46,44 +46,47 @@ function initRoomValues() {
         roomValues[i] = new Array(cols);
     }
 
-    // doors initialization - sadly hardcoded
-    doorPositions = [];
-    inFrontOfDoorSpaces = [];
-    doorPositions.push({row: Math.floor(rows / 2), col: Math.floor(cols - 1)});
-    inFrontOfDoorSpaces.push({row: doorPositions[0].row, col: doorPositions[0].col - 1});
-
-    doorPositions.push({row: Math.floor(rows - 1), col: Math.floor(cols / 2)});
-    inFrontOfDoorSpaces.push({row: doorPositions[1].row - 1, col: doorPositions[1].col});
-
-    doorPositions.push({row: Math.floor(0), col: Math.floor(cols / 2)});
-    inFrontOfDoorSpaces.push({row: doorPositions[2].row + 1, col: doorPositions[2].col});
-
-    doorPositions.push({row: Math.floor(rows / 2), col: Math.floor(0)});
-    inFrontOfDoorSpaces.push({row: doorPositions[3].row, col: doorPositions[3].col + 1});
+    // // doors initialization - sadly hardcoded
+    // doorPositions = [];
+    // inFrontOfDoorSpaces = [];
+    // doorPositions.push({row: Math.floor(rows / 2), col: Math.floor(cols - 1)});
+    // inFrontOfDoorSpaces.push({row: doorPositions[0].row, col: doorPositions[0].col - 1});
+    //
+    // doorPositions.push({row: Math.floor(rows - 1), col: Math.floor(cols / 2)});
+    // inFrontOfDoorSpaces.push({row: doorPositions[1].row - 1, col: doorPositions[1].col});
+    //
+    // doorPositions.push({row: Math.floor(0), col: Math.floor(cols / 2)});
+    // inFrontOfDoorSpaces.push({row: doorPositions[2].row + 1, col: doorPositions[2].col});
+    //
+    // doorPositions.push({row: Math.floor(rows / 2), col: Math.floor(0)});
+    // inFrontOfDoorSpaces.push({row: doorPositions[3].row, col: doorPositions[3].col + 1});
 
     for (let row = 0; row < rows; row++) {
         for (let col = 0; col < cols; col++) {
             if (row === 0 || row === rows - 1 || col === 0 || col === cols - 1) {
                 roomValues[row][col] = -1;
             } else {
-                roomValues[row][col] = getDistanceToDoor(row, col);
+                roomValues[row][col] = 8;   // TODO later change to 0 (changes in movement logic needed)
             }
+            // else {
+            //     roomValues[row][col] = getDistanceToDoor(row, col);
+            // }
         }
     }
 }
 
-function getDistanceToDoor(row, col) {
-    let minDistance = 100000;
-    for (let i = 0; i < doorsToUse; i++) {
-        let doorRow = doorPositions[i].row;
-        let doorCol = doorPositions[i].col;
-        let distance = Math.sqrt(Math.pow(doorRow - row, 2) + Math.pow(doorCol - col, 2));
-        if (distance < minDistance) {
-            minDistance = distance;
-        }
-    }
-    return minDistance;
-}
+// function getDistanceToDoor(row, col) {
+//     let minDistance = 100000;
+//     for (let i = 0; i < doorsToUse; i++) {
+//         let doorRow = doorPositions[i].row;
+//         let doorCol = doorPositions[i].col;
+//         let distance = Math.sqrt(Math.pow(doorRow - row, 2) + Math.pow(doorCol - col, 2));
+//         if (distance < minDistance) {
+//             minDistance = distance;
+//         }
+//     }
+//     return minDistance;
+// }
 
 function paintRoomSquares() {
     for (let row = 0; row < rows; row++) {
@@ -101,8 +104,6 @@ function paintRoomSquares() {
 function getRectColor(rectValue) {
     if (rectValue === -1) {
         return "#231f20";
-    } else if (rectValue === -2) {
-        return "#ff0000";
     } else {
         return "#ffffff";
     }
@@ -183,7 +184,7 @@ function initListeners() {
     startPersonsNumber = document.getElementById('personsSlider').value;
     document.getElementById('personsSlider').max = maxPersonsInside;
     stepTime = document.getElementById('stepTimeSlider').value;
-    // doorsToUse = document.getElementById('numberOfDoorsSlider').value; TODO factors variables
+    doorsToUse = document.getElementById('numberOfDoorsSlider').value; // TODO factors variables
     // obstaclesDensity = document.getElementById('obstaclesDensitySlider').value;
     // panicFactor = document.getElementById('panicFactorSlider').value;
 
