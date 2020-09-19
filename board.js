@@ -1,27 +1,26 @@
 /*eslint-env browser*/
 
-var canvas, context;
-var isPaused = true;
-var timer = 0;
-var chartCount = 0;
-var roomValues;
-var squareSize = 50;
-var personTable;
-var rows;
-var cols;
-var usedPositions;
-var startPersonsNumber;
-var numberOfSurvivors = 0;
-var areListenersEnabled = true;
-var maxPersonsInside;
-var stepTime;
-var personsHaveSingleColor = false;
-var doorPositions;
-var inFrontOfDoorSpaces;
-var alphaFactor;
-var betaFactor;
-var gammaFactor;
-var numberOfSteps = 0;
+let canvas, context;
+let isPaused = true;
+let timer = 0;
+let chartCount = 0;
+let roomValues;
+let squareSize = 50;
+let personTable;
+let rows;
+let cols;
+let usedPositions;
+let startPersonsNumber;
+let numberOfSurvivors = 0;
+let areListenersEnabled = true;
+let maxPersonsInside;
+let stepTime;
+let doorPositions;
+let inFrontOfDoorSpaces;
+let alphaFactor;
+let betaFactor;
+let gammaFactor;
+let numberOfSteps = 0;
 
 window.onload = function () {
     canvas = document.getElementById("board");
@@ -46,47 +45,16 @@ function initRoomValues() {
         roomValues[i] = new Array(cols);
     }
 
-    // // doors initialization - sadly hardcoded
-    // doorPositions = [];
-    // inFrontOfDoorSpaces = [];
-    // doorPositions.push({row: Math.floor(rows / 2), col: Math.floor(cols - 1)});
-    // inFrontOfDoorSpaces.push({row: doorPositions[0].row, col: doorPositions[0].col - 1});
-    //
-    // doorPositions.push({row: Math.floor(rows - 1), col: Math.floor(cols / 2)});
-    // inFrontOfDoorSpaces.push({row: doorPositions[1].row - 1, col: doorPositions[1].col});
-    //
-    // doorPositions.push({row: Math.floor(0), col: Math.floor(cols / 2)});
-    // inFrontOfDoorSpaces.push({row: doorPositions[2].row + 1, col: doorPositions[2].col});
-    //
-    // doorPositions.push({row: Math.floor(rows / 2), col: Math.floor(0)});
-    // inFrontOfDoorSpaces.push({row: doorPositions[3].row, col: doorPositions[3].col + 1});
-
     for (let row = 0; row < rows; row++) {
         for (let col = 0; col < cols; col++) {
             if (row === 0 || row === rows - 1 || col === 0 || col === cols - 1) {
                 roomValues[row][col] = -1;
             } else {
-                roomValues[row][col] = 8;   // TODO later change to 0 (changes in movement logic needed)
+                roomValues[row][col] = 0;
             }
-            // else {
-            //     roomValues[row][col] = getDistanceToDoor(row, col);
-            // }
         }
     }
 }
-
-// function getDistanceToDoor(row, col) {
-//     let minDistance = 100000;
-//     for (let i = 0; i < doorsToUse; i++) {
-//         let doorRow = doorPositions[i].row;
-//         let doorCol = doorPositions[i].col;
-//         let distance = Math.sqrt(Math.pow(doorRow - row, 2) + Math.pow(doorCol - col, 2));
-//         if (distance < minDistance) {
-//             minDistance = distance;
-//         }
-//     }
-//     return minDistance;
-// }
 
 function paintRoomSquares() {
     for (let row = 0; row < rows; row++) {
@@ -111,15 +79,7 @@ function getRectColor(rectValue) {
 
 function initPersons() {
     personTable = [];
-    usedPositions = new Array(rows);
-    for (let i = 0; i < rows; i++) {
-        usedPositions[i] = new Array(cols);
-    }
-    for (let row = 1; row < rows - 1; row++) {
-        for (let col = 1; col < cols - 1; col++) {
-            usedPositions[row][col] = 0;
-        }
-    }
+    usedPositions = getNewEmptyInsideBoardValues(rows, cols)
 
     let freePositions = getFreePositions();
     maxPersonsInside = freePositions.length;
@@ -130,7 +90,7 @@ function initPersons() {
         let index = getRandomInt(freePositions.length);
         let pos = freePositions[index];
         freePositions.splice(index, 1);
-        let person = {col: pos.col, row: pos.row, color: getRandomColor()};
+        let person = {col: pos.col, row: pos.row, state: 0}
         personTable.push(person);
         usedPositions[person.row][person.col] = 1;
     }
@@ -149,28 +109,17 @@ function getFreePositions() {
     return freePositions;
 }
 
-function getRandomColor() {
-    let letters = '0123456789ABCDEF';
-    let color = '#';
-    for (let i = 0; i < 6; i++) {
-        color += letters[Math.floor(Math.random() * 16)];
-    }
-    return color;
-}
-
 function updatePersons() {
     updateHTMLPersonsNumbers();
     paintRoomSquares();
     for (let i = 0; i < personTable.length; i++) {
         let row = personTable[i].row;
         let col = personTable[i].col;
-        if (personsHaveSingleColor) {
-            context.fillStyle = "#3366DD";
-        } else {
-            context.fillStyle = personTable[i].color;
-        }
+        let state = personTable[i].state
         let xOffset = col * squareSize;
         let yOffset = row * squareSize;
+
+        context.fillStyle = getColorForPerson(state)
         context.fillRect(xOffset, yOffset, squareSize, squareSize);
         context.strokeRect(xOffset, yOffset, squareSize, squareSize);
     }
@@ -178,6 +127,17 @@ function updatePersons() {
 
 function updateHTMLPersonsNumbers() {
     document.getElementById("peopleInside").innerHTML = personTable.length;
+}
+
+function getColorForPerson(state) {
+    if (state === 0)
+        return "#54a220"
+    else if (state === 1)
+        return "#ffed43"
+    else if (state === 2)
+        return "#d73417"
+    else if (state === 3)
+        return "#3366DD"
 }
 
 function initListeners() {
@@ -208,10 +168,6 @@ function initListeners() {
     document.getElementById('gammaFactorSlider').addEventListener("input", function () {
         updateGammaFactor();
     });
-    document.getElementById('SingleColorBox').addEventListener("click", function () {
-        personsHaveSingleColor = document.getElementById('SingleColorBox').checked;
-        updatePersons();
-    });
 }
 
 function step() {
@@ -233,7 +189,12 @@ function checkEndOfSimulation() {
     }
 }
 
-// TODO refactor
+/** states:
+ * 0 - healthy
+ * 1 - infected
+ * 2 - sick
+ * 3 - recovered
+ */
 function calculatePersonsNewPositions() {
     let newUsedPositions = getNewEmptyInsideBoardValues(rows, cols)
 
@@ -258,7 +219,7 @@ function calculatePersonsNewPositions() {
 
 function getNewEmptyInsideBoardValues(rows, cols) {
     let boardValues = new Array(rows);
-    for (let i = 0; i < rows; i++) {    // TODO method that returns emptyInsideBoardValues
+    for (let i = 0; i < rows; i++) {
         boardValues[i] = new Array(cols);
     }
     for (let row = 1; row < rows - 1; row++) {
