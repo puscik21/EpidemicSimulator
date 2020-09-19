@@ -23,7 +23,7 @@ var obstaclesDensity;
 var panicFactor;
 var numberOfSteps = 0;
 
-window.onload = function() {
+window.onload = function () {
     canvas = document.getElementById("board");
     context = canvas.getContext("2d");
     initChart();
@@ -34,8 +34,6 @@ window.onload = function() {
 
 function initRoom() {
     initRoomValues();
-    insertObstacles();
-    insertDoor();
     paintRoomSquares();
 }
 
@@ -65,7 +63,7 @@ function initRoomValues() {
 
     for (let row = 0; row < rows; row++) {
         for (let col = 0; col < cols; col++) {
-            if (row === 0 || row === rows -1 || col === 0 || col === cols - 1) {
+            if (row === 0 || row === rows - 1 || col === 0 || col === cols - 1) {
                 roomValues[row][col] = -1;
             } else {
                 roomValues[row][col] = getDistanceToDoor(row, col);
@@ -85,75 +83,6 @@ function getDistanceToDoor(row, col) {
         }
     }
     return minDistance;
-}
-
-function insertObstacles() {
-    let numberOfTriesWithObstacles = Math.floor(obstaclesDensity / squareSize);
-    for (let i = 0; i < numberOfTriesWithObstacles; i++) {
-        let row = getRandomInt(rows - 2) + 1;
-        let col = getRandomInt(cols - 2) + 1;
-        insertSingleObstacle(row, col);
-    }
-
-    for (let i = 0; i < numberOfTriesWithObstacles; i++) {
-        if (getRandomInt(2) === 0) {
-            insertVerticalObstacle();
-        } else {
-            insertHorizontalObstacle();
-        }
-    }
-}
-
-function insertSingleObstacle(obRow, obCol) {
-    for (let row = obRow - 1; row <= obRow + 1; row++) {
-        for (let col = obCol - 1; col <= obCol + 1; col++) {
-            if (roomValues[row][col] !== 0 && roomValues[row][col] !== -1) {
-                roomValues[row][col] = getDistanceToDoor(row, col);
-            }
-        }
-    }
-    roomValues[obRow][obCol] = -2;
-}
-
-function insertVerticalObstacle() {
-    let obRow = getRandomInt(rows - 3) + 1;
-    let obCol = getRandomInt(cols - 2) + 1;
-
-    for (let row = obRow - 1; row <= obRow + 2; row++) {
-        for (let col = obCol - 1; col <= obCol + 1; col++) {
-            if (roomValues[row][col] !== 0 && roomValues[row][col] !== -1) {
-                roomValues[row][col] = getDistanceToDoor(row, col);
-            }
-        }
-    }
-    roomValues[obRow][obCol] = -2;
-    roomValues[obRow + 1][obCol] = -2;
-}
-
-function insertHorizontalObstacle() {
-    let obRow = getRandomInt(rows - 2) + 1;
-    let obCol = getRandomInt(cols - 3) + 1;
-
-    for (let row = obRow - 1; row <= obRow + 1; row++) {
-        for (let col = obCol - 1; col <= obCol + 2; col++) {
-            if (roomValues[row][col] !== 0 && roomValues[row][col] !== -1) {
-                roomValues[row][col] = getDistanceToDoor(row, col);
-            }
-        }
-    }
-    roomValues[obRow][obCol] = -2;
-    roomValues[obRow][obCol + 1] = -2;
-}
-
-function insertDoor() {
-    for (let i = 0; i < doorsToUse; i++) {
-        let doorRow = doorPositions[i].row;
-        let doorCol = doorPositions[i].col;
-        let spaceRow = inFrontOfDoorSpaces[i].row;
-        let spaceCol = inFrontOfDoorSpaces[i].col;
-        roomValues[doorRow][doorCol] = 0;
-        roomValues[spaceRow][spaceCol - 1] = getDistanceToDoor(spaceRow, spaceCol - 1);
-    }
 }
 
 function paintRoomSquares() {
@@ -254,9 +183,9 @@ function initListeners() {
     startPersonsNumber = document.getElementById('personsSlider').value;
     document.getElementById('personsSlider').max = maxPersonsInside;
     stepTime = document.getElementById('stepTimeSlider').value;
-    doorsToUse = document.getElementById('numberOfDoorsSlider').value;
-    obstaclesDensity = document.getElementById('obstaclesDensitySlider').value;
-    panicFactor = document.getElementById('panicFactorSlider').value;
+    // doorsToUse = document.getElementById('numberOfDoorsSlider').value; TODO factors variables
+    // obstaclesDensity = document.getElementById('obstaclesDensitySlider').value;
+    // panicFactor = document.getElementById('panicFactorSlider').value;
 
     initSlidersLabels();
 
@@ -269,14 +198,14 @@ function initListeners() {
     document.getElementById('stepTimeSlider').addEventListener("input", function () {
         updateStepTime();
     });
-    document.getElementById('numberOfDoorsSlider').addEventListener("input", function () {
-        updateDoorsToUse();
+    document.getElementById('alphaFactorSlider').addEventListener("input", function () {
+        updateAlphaFactor();
     });
-    document.getElementById('obstaclesDensitySlider').addEventListener("input", function () {
-        updateObstaclesDensity();
+    document.getElementById('betaFactorSlider').addEventListener("input", function () {
+        updateBetaFactor();
     });
-    document.getElementById('panicFactorSlider').addEventListener("input", function () {
-        updatePanicFactor();
+    document.getElementById('gammaFactorSlider').addEventListener("input", function () {
+        updateGammaFactor();
     });
     document.getElementById('SingleColorBox').addEventListener("click", function () {
         personsHaveSingleColor = document.getElementById('SingleColorBox').checked;
@@ -296,6 +225,7 @@ function step() {
     }
 }
 
+// TODO another end of simulation - everyone is recovered
 function checkEndOfSimulation() {
     if (personTable.length === 0) {
         pause();
@@ -461,8 +391,9 @@ function initSlidersLabels() {
     document.getElementById('startNumberOfPeopleLabel').innerHTML = "Start number of people: " + document.getElementById('personsSlider').value;
     document.getElementById('squareSizeLabel').innerHTML = "Square size: " + document.getElementById('squareSizeSlider').value;
     document.getElementById('stepTimeLabel').innerHTML = "Step time: " + document.getElementById('stepTimeSlider').value;
-    document.getElementById('numberOfDoorsLabel').innerHTML = "Number of doors: " + document.getElementById('numberOfDoorsSlider').value;
-    document.getElementById('panicFactorLabel').innerHTML = "Panic factor: " + document.getElementById('panicFactorSlider').value + " %";
+    document.getElementById('alphaFactorLabel').innerHTML = document.getElementById('alphaFactorLabel').innerHTML + document.getElementById('alphaFactorSlider').value + " %";
+    document.getElementById('betaFactorLabel').innerHTML = document.getElementById('betaFactorLabel').innerHTML + document.getElementById('betaFactorSlider').value + " %";
+    document.getElementById('gammaFactorLabel').innerHTML = document.getElementById('gammaFactorLabel').innerHTML + document.getElementById('gammaFactorSlider').value + " %";
 }
 
 function updateStartPersonsNumber() {
@@ -492,28 +423,19 @@ function updateStepTime() {
     document.getElementById('stepTimeLabel').innerHTML = "Step time: " + stepTime;
 }
 
-function updateDoorsToUse() {
-    if (areListenersEnabled) {
-        doorsToUse = document.getElementById('numberOfDoorsSlider').value;
-        document.getElementById('numberOfDoorsLabel').innerHTML = "Number of doors: " + doorsToUse;
-        updateViewedNumbers();
-        initRoom();
-        initPersons();
-    }
+function updateAlphaFactor() {
+    doorsToUse = document.getElementById('alphaFactorSlider').value;
+    document.getElementById('alphaFactorLabel').innerHTML = "Alpha factor (healthy -> infected): " + doorsToUse + " %";
 }
 
-function updateObstaclesDensity() {
-    if (areListenersEnabled) {
-        obstaclesDensity = document.getElementById('obstaclesDensitySlider').value;
-        updateViewedNumbers();
-        initRoom();
-        initPersons();
-    }
+function updateBetaFactor() {
+    obstaclesDensity = document.getElementById('betaFactorSlider').value;
+    document.getElementById('betaFactorLabel').innerHTML = "Beta factor (infected -> sick): " + obstaclesDensity + " %";
 }
 
-function updatePanicFactor() {
-    panicFactor = document.getElementById('panicFactorSlider').value;
-    document.getElementById('panicFactorLabel').innerHTML = "Panic factor: " + panicFactor + " %";
+function updateGammaFactor() {
+    panicFactor = document.getElementById('gammaFactorSlider').value;
+    document.getElementById('gammaFactorLabel').innerHTML = "Gamma factor (sick -> recovered): " + panicFactor + " %";
 }
 
 function updateViewedNumbers() {
