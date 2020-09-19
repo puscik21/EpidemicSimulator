@@ -130,7 +130,7 @@ function initPersons() {
         let index = getRandomInt(freePositions.length);
         let pos = freePositions[index];
         freePositions.splice(index, 1);
-        let person = {col: pos.col, row: pos.row, color: getRandomColor(), tries: 0};
+        let person = {col: pos.col, row: pos.row, color: getRandomColor()};
         personTable.push(person);
         usedPositions[person.row][person.col] = 1;
     }
@@ -218,8 +218,8 @@ function step() {
     checkEndOfSimulation();
     calculatePersonsNewPositions();
     updatePersons();
-
     updateChart();
+
     document.getElementById("numberOfSteps").innerHTML = '' + ++numberOfSteps;
     if (!isPaused) {
         timer = setTimeout(step, stepTime);
@@ -235,104 +235,38 @@ function checkEndOfSimulation() {
 
 // TODO refactor
 function calculatePersonsNewPositions() {
-    let newUsedPositions = new Array(rows);
-    for (let i = 0; i < rows; i++) {
-        newUsedPositions[i] = new Array(cols);
-    }
-    for (let row = 1; row < rows - 1; row++) {
-        for (let col = 1; col < cols - 1; col++) {
-            newUsedPositions[row][col] = 0;
-        }
-    }
+    let newUsedPositions = getNewEmptyInsideBoardValues(rows, cols)
+
     let personsTempTable = [];
     for (let i = 0; i < personTable.length; i++) {
         let value = roomValues[personTable[i].row][personTable[i].col];
         personsTempTable[i] = {row: personTable[i].row, col: personTable[i].col, val: value, index: i};
     }
 
-    let indexesToRemove = [];
     for (let i = personsTempTable.length - 1; i >= 0; i--) {
         let personIndex = personsTempTable[i].index;
         let actualValue = roomValues[personsTempTable[i].row][personsTempTable[i].col];
         let actualPosition = {row: personsTempTable[i].row, col: personsTempTable[i].col, val: actualValue};
 
-        /** if standing in door - remove
-         * else if standing too long or in panic - make random move
-         * else try to make simple move (horizontal or vertical)
-         */
-        if (roomValues[personsTempTable[i].row][personsTempTable[i].col] === 0) {
-            personsTempTable.splice(i, 1);
-            indexesToRemove.push(personIndex);
-            document.getElementById("peopleThatEscaped").innerHTML = '' + ++numberOfSurvivors;
-        } else if (personTable[personIndex].tries > 3) {
-            let newPos = tryToFindRandomMove(actualPosition, newUsedPositions); // TODO probably the only one to leave here
-            personsTempTable.splice(i, 1);
-            personTable[personIndex].row = newPos.row;
-            personTable[personIndex].col = newPos.col;
-            personTable[personIndex].tries = 0;
-            newUsedPositions[newPos.row][newPos.col] = 1;
-        } else {
-            let newPos = tryToFindSimpleDirection(actualPosition, newUsedPositions);
-            if (newPos.val < actualValue) {
-                personsTempTable.splice(i, 1);
-                personTable[personIndex].row = newPos.row;
-                personTable[personIndex].col = newPos.col;
-                newUsedPositions[newPos.row][newPos.col] = 1;
-            }
-        }
-    }
-
-    // if nothing from above worked try to make diagonal move, else dont move
-    for (let i = personsTempTable.length - 1; i >= 0; i--) {
-        let personIndex = personsTempTable[i].index;
-
-        let actualValue = roomValues[personsTempTable[i].row][personsTempTable[i].col];
-        let actualPosition = {row: personsTempTable[i].row, col: personsTempTable[i].col, val: actualValue};
-        let newPos = tryToFindDiagonalDirection(actualPosition, newUsedPositions);
-        if (newPos.val < actualValue) {
-            personsTempTable.splice(i, 1);
-            personTable[personIndex].row = newPos.row;
-            personTable[personIndex].col = newPos.col;
-        } else {    // if cant find new position increment person tries counter
-            personTable[personIndex].tries++;
-        }
+        let newPos = tryToFindRandomMove(actualPosition, newUsedPositions);
+        personTable[personIndex].row = newPos.row;
+        personTable[personIndex].col = newPos.col;
         newUsedPositions[newPos.row][newPos.col] = 1;
-    }
-
-    for (let i = 0; i < indexesToRemove.length; i++) {
-        personTable.splice(indexesToRemove[i], 1);
     }
     usedPositions = newUsedPositions;
 }
 
-function tryToFindSimpleDirection(actualPosition, newUsedPositions) {
-    let newPositions = [];
-    newPositions.push(checkPosition(actualPosition.row, actualPosition.col - 1, actualPosition.val, newUsedPositions));
-    newPositions.push(checkPosition(actualPosition.row, actualPosition.col + 1, actualPosition.val, newUsedPositions));
-    newPositions.push(checkPosition(actualPosition.row - 1, actualPosition.col, actualPosition.val, newUsedPositions));
-    newPositions.push(checkPosition(actualPosition.row + 1, actualPosition.col, actualPosition.val, newUsedPositions));
-
-    for (let i = 0; i < newPositions.length; i++) {
-        if (newPositions[i] != null && newPositions[i].val < actualPosition.val) {
-            actualPosition = newPositions[i];
+function getNewEmptyInsideBoardValues(rows, cols) {
+    let boardValues = new Array(rows);
+    for (let i = 0; i < rows; i++) {    // TODO method that returns emptyInsideBoardValues
+        boardValues[i] = new Array(cols);
+    }
+    for (let row = 1; row < rows - 1; row++) {
+        for (let col = 1; col < cols - 1; col++) {
+            boardValues[row][col] = 0;
         }
     }
-    return actualPosition;
-}
-
-function tryToFindDiagonalDirection(actualPosition, newUsedPositions) {
-    let newPositions = [];
-    newPositions.push(checkPosition(actualPosition.row - 1, actualPosition.col - 1, actualPosition.val, newUsedPositions));
-    newPositions.push(checkPosition(actualPosition.row - 1, actualPosition.col + 1, actualPosition.val, newUsedPositions));
-    newPositions.push(checkPosition(actualPosition.row + 1, actualPosition.col - 1, actualPosition.val, newUsedPositions));
-    newPositions.push(checkPosition(actualPosition.row + 1, actualPosition.col + 1, actualPosition.val, newUsedPositions));
-
-    for (let i = 0; i < newPositions.length; i++) {
-        if (newPositions[i] != null && newPositions[i].val < actualPosition.val) {
-            actualPosition = newPositions[i];
-        }
-    }
-    return actualPosition;
+    return boardValues
 }
 
 function tryToFindRandomMove(actualPosition, newUsedPositions) {
