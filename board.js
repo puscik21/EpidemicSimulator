@@ -18,9 +18,9 @@ var stepTime;
 var personsHaveSingleColor = false;
 var doorPositions;
 var inFrontOfDoorSpaces;
-var doorsToUse;
-var obstaclesDensity;
-var panicFactor;
+var alphaFactor;
+var betaFactor;
+var gammaFactor;
 var numberOfSteps = 0;
 
 window.onload = function () {
@@ -184,9 +184,9 @@ function initListeners() {
     startPersonsNumber = document.getElementById('personsSlider').value;
     document.getElementById('personsSlider').max = maxPersonsInside;
     stepTime = document.getElementById('stepTimeSlider').value;
-    doorsToUse = document.getElementById('numberOfDoorsSlider').value; // TODO factors variables
-    // obstaclesDensity = document.getElementById('obstaclesDensitySlider').value;
-    // panicFactor = document.getElementById('panicFactorSlider').value;
+    alphaFactor = document.getElementById('alphaFactorSlider').value;
+    betaFactor = document.getElementById('betaFactorSlider').value;
+    gammaFactor = document.getElementById('gammaFactorSlider').value;
 
     initSlidersLabels();
 
@@ -264,8 +264,8 @@ function calculatePersonsNewPositions() {
             personsTempTable.splice(i, 1);
             indexesToRemove.push(personIndex);
             document.getElementById("peopleThatEscaped").innerHTML = '' + ++numberOfSurvivors;
-        } else if (personTable[personIndex].tries > 3 || getRandomInt(100) < panicFactor) {
-            let newPos = tryToFindRandomMove(actualPosition, newUsedPositions);
+        } else if (personTable[personIndex].tries > 3) {
+            let newPos = tryToFindRandomMove(actualPosition, newUsedPositions); // TODO probably the only one to leave here
             personsTempTable.splice(i, 1);
             personTable[personIndex].row = newPos.row;
             personTable[personIndex].col = newPos.col;
@@ -425,18 +425,18 @@ function updateStepTime() {
 }
 
 function updateAlphaFactor() {
-    doorsToUse = document.getElementById('alphaFactorSlider').value;
-    document.getElementById('alphaFactorLabel').innerHTML = "Alpha factor (healthy -> infected): " + doorsToUse + " %";
+    alphaFactor = document.getElementById('alphaFactorSlider').value;
+    document.getElementById('alphaFactorLabel').innerHTML = "Alpha factor (healthy -> infected): " + alphaFactor + " %";
 }
 
 function updateBetaFactor() {
-    obstaclesDensity = document.getElementById('betaFactorSlider').value;
-    document.getElementById('betaFactorLabel').innerHTML = "Beta factor (infected -> sick): " + obstaclesDensity + " %";
+    betaFactor = document.getElementById('betaFactorSlider').value;
+    document.getElementById('betaFactorLabel').innerHTML = "Beta factor (infected -> sick): " + betaFactor + " %";
 }
 
 function updateGammaFactor() {
-    panicFactor = document.getElementById('gammaFactorSlider').value;
-    document.getElementById('gammaFactorLabel').innerHTML = "Gamma factor (sick -> recovered): " + panicFactor + " %";
+    gammaFactor = document.getElementById('gammaFactorSlider').value;
+    document.getElementById('gammaFactorLabel').innerHTML = "Gamma factor (sick -> recovered): " + gammaFactor + " %";
 }
 
 function updateViewedNumbers() {
