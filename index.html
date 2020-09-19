@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Room escape simulation - project</title>
+        <meta charset="utf-8" />
+        <link rel="stylesheet" href="style.css" type="text/css"/>
+        <script type="text/javascript" src="board.js"></script>
+        <script type="text/javascript" src="plotly.min.js"></script>
+    </head>
+<body>
+    <header>
+        <div>
+            <h1>Room escape simulation</h1>
+            <div id="buttons-div">
+                <input type="button" class="button" id="start" value="Start" onclick="start()">
+                <input type="button" class="button" id="pause" value="Pause" onclick="pause()">
+            </div>
+        </div>
+    </header>
+        <div id="statsNumbers">
+            <table>
+                <tr>
+                    <th>People inside: </th>
+                    <th>People that escaped: </th>
+                    <th>Number of steps: </th>
+                </tr>
+                <tr>
+                    <td><h1 id="peopleInside"></h1></td>
+                    <td><h1 id="peopleThatEscaped">0</h1></td>
+                    <td><h1 id="numberOfSteps">0</h1></td>
+                </tr>
+            </table>
+        </div>
+    <div>
+        <div id="presentation-div">
+            <canvas id="board" width="1200" height="600"></canvas>
+            <div id="chart"></div>
+        </div>
+        <div id="personsSliders">
+            <table class="white">
+                <tr>
+                    <td>
+                        <p id="startNumberOfPeopleLabel">Start number of people: </p>
+                        <input id="personsSlider" type="range" min="1" max="100" value="50" width="100%"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <p id="squareSizeLabel">Square size: </p>
+                        <input id="squareSizeSlider" type="range" min="6" max="150" value="50" width="100%"/>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <p id="stepTimeLabel">Step time: </p>
+                        <input id="stepTimeSlider" type="range" min="10" max="1500" value="500" width="100%"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <p id="numberOfDoorsLabel">Number of doors: </p>
+                        <input id="numberOfDoorsSlider" type="range" min="1" max="4" value="1" width="100%"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <p id="obstaclesDensityLabel">Obstacles density: </p>
+                        <input id="obstaclesDensitySlider" type="range" min="0" max="2500" value="1250" width="100%"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <p id="panicFactorLabel">Panic factor: </p>
+                        <input id="panicFactorSlider" type="range" min="0" max="100" value="0" width="100%"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <input type="checkbox" id="SingleColorBox">
+                        <label for="SingleColorBox"> Single color</label><br>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

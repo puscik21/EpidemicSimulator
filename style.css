@@ -1,0 +1,71 @@
+body {
+    background-color: #ffffff;
+}
+
+.white-title {
+    text-align:center;
+    color:white;
+}
+
+.white {
+    text-align:center;
+    color: #231f20;
+    font-size: 20px;
+}
+
+.button {
+    width: 100px;
+    font-weight: bold;
+    margin-left: 5px;
+    margin-right: 5px;
+    margin-top: 10px;
+}
+
+header {
+    background-color: #333333;
+    padding: 30px;
+    margin-bottom: 15px;
+    text-align: center;
+    font-size: 35px;
+    color: white;
+}
+
+table {
+    padding-top: 10px;
+    width: 100%;
+}
+th, td {
+    text-align: center;
+    padding: 0;
+    margin: 0px;
+}
+
+#statsNumbers {
+    font-size: 20px;
+}
+
+#presentation-div {
+    clear: both;
+    float: left;
+    margin-left: 30px;
+}
+
+#board{
+    clear: both;
+    float:left;
+}
+
+#chart {
+    width: 800px;
+    height: 400px;
+    clear: both;
+    stroke: #333333;
+    border-style: groove;
+    margin: auto;
+}
+
+#personsSliders {
+    float: right;
+    margin-right: 30px;
+    color: #dddddd;
+}
