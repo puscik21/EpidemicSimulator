@@ -132,6 +132,7 @@ function initInfectedPersons() {
         count--
         let person = personTable[i]
         person.state = 1
+        person.stateSteps = 1
         usedPositions[person.row][person.col] = {isUsed: true, state: 1}
     }
 }
@@ -212,9 +213,18 @@ function step() {
 
 // TODO another end of simulation - everyone is recovered
 function checkEndOfSimulation() {
-    if (personTable.length === 0) {
+    if (isNoInfectedOrSick()) {
         pause();
     }
+}
+
+function isNoInfectedOrSick() {
+    for (let i = 0; i < personTable.length; i++) {
+        if (personTable[i].state === 1 || personTable[i].state === 2) {
+            return false
+        }
+    }
+    return true
 }
 
 /** states:
@@ -224,13 +234,7 @@ function checkEndOfSimulation() {
  * 3 - recovered
  */
 function calculatePersonsStates() {
-    // najpierw switch / ify do rozeznania stanu
-    // 0 - zabawa w badanie sasiadow czy sa zainfekowani / chorzy
-    // 1 - dodawanie stateStepsow i uzywanie pBeta
-    // 2 - dodawanie stateStepsow i uzywanie pGamma
-    // 3 - return
-
-    calcStateForHealthy()
+    calcAllStatesForHealthy()
     for (let i = 0; i < personTable.length; i++) {
         let state = personTable[i].state
         if (state === 1)
@@ -240,7 +244,7 @@ function calculatePersonsStates() {
     }
 }
 
-function calcStateForHealthy() {
+function calcAllStatesForHealthy() {
     let newPersonTable = []
     newPersonTable.push(...personTable)
     let newUsedPositions = copyUsedPositions()
@@ -290,11 +294,35 @@ function copyUsedPositions() {
 }
 
 function calcStateForInfected(i) {
-
+    let person = personTable[i]
+    if (isGoingToNextState(person.stateSteps, betaFactor, 10)) {
+        usedPositions[person.row][person.col] = {isUsed: true, state: 2}
+        person.state = 2
+        person.stateSteps = 0
+    } else {
+        person.stateSteps++
+    }
 }
 
 function calcStateForSick(i) {
+    console.log(gammaFactor)
+    let person = personTable[i]
+    if (isGoingToNextState(person.stateSteps, gammaFactor, 20)) {
+        usedPositions[person.row][person.col] = {isUsed: true, state: 3}
+        person.state = 3
+        person.stateSteps = 0
+    } else {
+        person.stateSteps++
+    }
+}
 
+function isGoingToNextState(stateSteps, factor, maxStateSteps) {
+    if (stateSteps >= maxStateSteps) {
+        return true;
+    }
+
+    let changeProb = stateSteps * factor
+    return getRandomBooleanForPercent(changeProb)
 }
 
 function calculatePersonsNewPositions() {
