@@ -189,7 +189,7 @@ function getColorForPerson(state) {
     else if (state === 2)
         return "#d73417"
     else if (state === 3)
-        return "#3366DD"
+        return "#3366dd"
 }
 
 function initListeners() {
@@ -481,36 +481,58 @@ function updateViewedNumbers() {
 }
 
 function initChart() {
-    let traceIn = {
+    let traceHealthy = {
         y: [0],
         mode: 'lines',
-        name: 'In',
+        name: 'Healthy',
         line: {
-            color: 'rgb(255, 31, 34)',
+            color: 'rgb(84, 162, 32)',
             width: 5
         }
     };
 
-    let traceOut = {
+    let traceInfected = {
         y: [0],
         mode: 'lines',
-        name: 'Outside',
+        name: 'Infected',
         line: {
-            color: 'rgb(2, 230, 48)',
+            color: 'rgb(255, 237, 67)',
             width: 5
         }
     };
 
-    let data = [traceIn, traceOut];
+    let traceSick = {
+        y: [0],
+        mode: 'lines',
+        name: 'Sick',
+        line: {
+            color: 'rgb(215, 52, 23)',
+            width: 5
+        }
+    };
+
+    let traceRecovered = {
+        y: [0],
+        mode: 'lines',
+        name: 'Recovered',
+        line: {
+            color: 'rgb(51, 102, 221)',
+            width: 5
+        }
+    };
+
+    let data = [traceHealthy, traceInfected, traceSick, traceRecovered];
     let layout = {
-        title: 'People in and out'
+        title: 'People states'
     };
     Plotly.newPlot('chart', data, layout);
 }
 
 function updateChart() {
-    Plotly.extendTraces('chart', {y: [[personTable.length]]}, [0]);
-    // Plotly.extendTraces('chart', {y: [[numberOfSurvivors]]}, [1]);
+    Plotly.extendTraces('chart', {y: [[healthyCounter]]}, [0]);
+    Plotly.extendTraces('chart', {y: [[infectedCounter]]}, [1]);
+    Plotly.extendTraces('chart', {y: [[sickCounter]]}, [2]);
+    Plotly.extendTraces('chart', {y: [[recoveredCounter]]}, [3]);
     chartCount++;
     if (chartCount > 50) {
         Plotly.relayout('chart', {
