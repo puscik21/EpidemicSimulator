@@ -336,12 +336,16 @@ function isGoingToNextState(stateSteps, factor, maxStateSteps) {
 function calculatePersonsNewPositions() {
     let newUsedPositions = getNewEmptyInsideBoardValues(rows, cols)
     for (let i = personTable.length - 1; i >= 0; i--) {
-        let actualPosition = {row: personTable[i].row, col: personTable[i].col};
+        let person = personTable[i]
+        if (person.state === 2) { // sick people dont move
+            continue
+        }
 
+        let actualPosition = {row: person.row, col: person.col};
         let newPos = tryToFindRandomMove(actualPosition, newUsedPositions);
-        personTable[i].row = newPos.row;
-        personTable[i].col = newPos.col;
-        newUsedPositions[newPos.row][newPos.col] = {isUsed: true, state: personTable[i].state}
+        person.row = newPos.row;
+        person.col = newPos.col;
+        newUsedPositions[newPos.row][newPos.col] = {isUsed: true, state: person.state}
     }
     usedPositions = newUsedPositions
 }
