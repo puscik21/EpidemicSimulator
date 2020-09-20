@@ -11,7 +11,6 @@ let rows;
 let cols;
 let usedPositions;
 let startPersonsNumber;
-let numberOfSurvivors = 0;
 let areListenersEnabled = true;
 let maxPersonsInside;
 let stepTime;
@@ -22,6 +21,10 @@ let betaFactor;
 let gammaFactor;
 let numberOfSteps = 0;
 let countOfInfected;
+let healthyCounter
+let infectedCounter
+let sickCounter
+let recoveredCounter
 
 window.onload = function () {
     canvas = document.getElementById("board");
@@ -158,7 +161,24 @@ function updatePersons() {
 }
 
 function updateHTMLPersonsNumbers() {
-    document.getElementById("peopleInside").innerHTML = personTable.length;
+    healthyCounter = countPeopleWithState(0)
+    infectedCounter = countPeopleWithState(1)
+    sickCounter = countPeopleWithState(2)
+    recoveredCounter = countPeopleWithState(3)
+
+    document.getElementById("healthyCounter").innerHTML = healthyCounter
+    document.getElementById("infectedCounter").innerHTML = infectedCounter
+    document.getElementById("sickCounter").innerHTML = sickCounter
+    document.getElementById("recoveredCounter").innerHTML = recoveredCounter
+}
+
+function countPeopleWithState(state) {
+    let count = 0
+    for (let i = 0; i < personTable.length; i++) {
+        if (personTable[i].state === state)
+            count++
+    }
+    return count
 }
 
 function getColorForPerson(state) {
@@ -182,7 +202,7 @@ function initListeners() {
     betaFactor = document.getElementById('betaFactorSlider').value;
     gammaFactor = document.getElementById('gammaFactorSlider').value;
 
-    initSlidersLabels();
+    updateSlidersLabels();
 
     document.getElementById('personsSlider').addEventListener("input", function () {
         updateStartPersonsNumber();
@@ -391,14 +411,14 @@ function pause() {
     }
 }
 
-function initSlidersLabels() {
+function updateSlidersLabels() {
     document.getElementById('startNumberOfPeopleLabel').innerHTML = "Start number of people: " + document.getElementById('personsSlider').value;
-    document.getElementById('startNumberOfInfectedLabel').innerHTML = "Start number of people: " + document.getElementById('infectedSlider').value;
+    document.getElementById('startNumberOfInfectedLabel').innerHTML = "Start number of infected: " + document.getElementById('infectedSlider').value;
     document.getElementById('squareSizeLabel').innerHTML = "Square size: " + document.getElementById('squareSizeSlider').value;
     document.getElementById('stepTimeLabel').innerHTML = "Step time: " + document.getElementById('stepTimeSlider').value;
-    document.getElementById('alphaFactorLabel').innerHTML = document.getElementById('alphaFactorLabel').innerHTML + document.getElementById('alphaFactorSlider').value + " %";
-    document.getElementById('betaFactorLabel').innerHTML = document.getElementById('betaFactorLabel').innerHTML + document.getElementById('betaFactorSlider').value + " %";
-    document.getElementById('gammaFactorLabel').innerHTML = document.getElementById('gammaFactorLabel').innerHTML + document.getElementById('gammaFactorSlider').value + " %";
+    document.getElementById('alphaFactorLabel').innerHTML = "Alpha factor (healthy -> infected): " + document.getElementById('alphaFactorSlider').value + " %";
+    document.getElementById('betaFactorLabel').innerHTML = "Beta factor (infected -> sick): " + document.getElementById('betaFactorSlider').value + " %";
+    document.getElementById('gammaFactorLabel').innerHTML = "Gamma factor (sick -> recovered): " + document.getElementById('gammaFactorSlider').value + " %";
 }
 
 function updateStartPersonsNumber() {
@@ -407,6 +427,7 @@ function updateStartPersonsNumber() {
         document.getElementById('startNumberOfPeopleLabel').innerHTML = "Start number of people: " + startPersonsNumber;
         updateViewedNumbers();
         initPersons();
+        updateSlidersLabels();
     }
 }
 
@@ -417,6 +438,7 @@ function updateInfectedPersonsNumber() {
         updateViewedNumbers();
         initInfectedPersons();
         updatePersons();
+        updateSlidersLabels();
     }
 }
 
@@ -453,10 +475,7 @@ function updateGammaFactor() {
     document.getElementById('gammaFactorLabel').innerHTML = "Gamma factor (sick -> recovered): " + gammaFactor + " %";
 }
 
-// TODO proper numbers after html is made
 function updateViewedNumbers() {
-    numberOfSurvivors = 0;
-    document.getElementById("peopleThatEscaped").innerHTML = '' + numberOfSurvivors;
     numberOfSteps = 0;
     document.getElementById("numberOfSteps").innerHTML = '' + numberOfSteps;
 }
@@ -491,7 +510,7 @@ function initChart() {
 
 function updateChart() {
     Plotly.extendTraces('chart', {y: [[personTable.length]]}, [0]);
-    Plotly.extendTraces('chart', {y: [[numberOfSurvivors]]}, [1]);
+    // Plotly.extendTraces('chart', {y: [[numberOfSurvivors]]}, [1]);
     chartCount++;
     if (chartCount > 50) {
         Plotly.relayout('chart', {
