@@ -90,11 +90,25 @@ function initPersons() {
         let index = getRandomInt(freePositions.length);
         let pos = freePositions[index];
         freePositions.splice(index, 1);
-        let person = {col: pos.col, row: pos.row, state: 0}
+        let person = {col: pos.col, row: pos.row, state: 0, stateSteps: 0}
         personTable.push(person);
-        usedPositions[person.row][person.col] = 1;
+        usedPositions[person.row][person.col] = {isUsed: true, state: 0}
     }
+    initInfectedPersons();
     updatePersons();
+}
+
+function getNewEmptyInsideBoardValues(rows, cols) {
+    let boardValues = new Array(rows);
+    for (let i = 0; i < rows; i++) {
+        boardValues[i] = new Array(cols);
+    }
+    for (let row = 1; row < rows - 1; row++) {
+        for (let col = 1; col < cols - 1; col++) {
+            boardValues[row][col] = {isUsed: false, state: 0};
+        }
+    }
+    return boardValues
 }
 
 function getFreePositions() {
@@ -107,6 +121,19 @@ function getFreePositions() {
         }
     }
     return freePositions;
+}
+
+function initInfectedPersons() {
+    let count = 1; // TODO value taken from global variable from slider "countOfInfected"
+    for (let i = 0; i < personTable.length; i++) {
+        if (count === 0) {
+            return
+        }
+        count--
+        let person = personTable[i]
+        person.state = 1
+        usedPositions[person.row][person.col] = {isUsed: true, state: 1}
+    }
 }
 
 function updatePersons() {
@@ -172,6 +199,7 @@ function initListeners() {
 
 function step() {
     checkEndOfSimulation();
+    calculatePersonsStates();
     calculatePersonsNewPositions();
     updatePersons();
     updateChart();
@@ -195,56 +223,105 @@ function checkEndOfSimulation() {
  * 2 - sick
  * 3 - recovered
  */
-function calculatePersonsNewPositions() {
-    let newUsedPositions = getNewEmptyInsideBoardValues(rows, cols)
+function calculatePersonsStates() {
+    // najpierw switch / ify do rozeznania stanu
+    // 0 - zabawa w badanie sasiadow czy sa zainfekowani / chorzy
+    // 1 - dodawanie stateStepsow i uzywanie pBeta
+    // 2 - dodawanie stateStepsow i uzywanie pGamma
+    // 3 - return
 
-    let personsTempTable = [];
+    calcStateForHealthy()
     for (let i = 0; i < personTable.length; i++) {
-        let value = roomValues[personTable[i].row][personTable[i].col];
-        personsTempTable[i] = {row: personTable[i].row, col: personTable[i].col, val: value, index: i};
+        let state = personTable[i].state
+        if (state === 1)
+            calcStateForInfected(i)
+        else if (state === 2)
+            calcStateForSick(i)
     }
-
-    for (let i = personsTempTable.length - 1; i >= 0; i--) {
-        let personIndex = personsTempTable[i].index;
-        let actualValue = roomValues[personsTempTable[i].row][personsTempTable[i].col];
-        let actualPosition = {row: personsTempTable[i].row, col: personsTempTable[i].col, val: actualValue};
-
-        let newPos = tryToFindRandomMove(actualPosition, newUsedPositions);
-        personTable[personIndex].row = newPos.row;
-        personTable[personIndex].col = newPos.col;
-        newUsedPositions[newPos.row][newPos.col] = 1;
-    }
-    usedPositions = newUsedPositions;
 }
 
-function getNewEmptyInsideBoardValues(rows, cols) {
-    let boardValues = new Array(rows);
+function calcStateForHealthy() {
+    let newPersonTable = []
+    newPersonTable.push(...personTable)
+    let newUsedPositions = copyUsedPositions()
+
+    for (let i = 0; i < personTable.length; i++) {
+        let state = personTable[i].state
+        if (state !== 0)
+            continue
+
+        let pRow = personTable[i].row;
+        let pCol = personTable[i].col;
+        let minRow = Math.max(pRow - 1, 1);
+        let maxRow = Math.min(pRow + 1, rows - 2);
+        let minCol = Math.max(pCol - 1, 1);
+        let maxCol = Math.min(pCol + 1, cols - 2);
+        let riskCounter = 0
+
+        for (let row = minRow; row <= maxRow; row++) {
+            for (let col = minCol; col <= maxCol; col++) {
+                if (usedPositions[row][col].state === 1 || usedPositions[row][col].state === 2) {
+                    riskCounter++
+                }
+            }
+        }
+        // TODO jakies bardziej fancy przeliczanie prawd. zarazenia
+        let infectionProb = riskCounter * alphaFactor;
+        if (getRandomBooleanForPercent(infectionProb)) {
+            newPersonTable[i] = {col: personTable[i].col, row: personTable[i].row, state: 1, stateSteps: 0}
+            newUsedPositions[pRow][pCol] = {isUsed: newUsedPositions[pRow][pCol].isUsed, state: 1}
+        }
+    }
+    personTable = newPersonTable
+    usedPositions = newUsedPositions
+}
+
+function copyUsedPositions() {
+    let newUsedPositions = new Array(rows);
     for (let i = 0; i < rows; i++) {
-        boardValues[i] = new Array(cols);
+        newUsedPositions[i] = Array(cols);
     }
     for (let row = 1; row < rows - 1; row++) {
         for (let col = 1; col < cols - 1; col++) {
-            boardValues[row][col] = 0;
+            newUsedPositions[row][col] = {...usedPositions[row][col]};
         }
     }
-    return boardValues
+    return newUsedPositions
+}
+
+function calcStateForInfected(i) {
+
+}
+
+function calcStateForSick(i) {
+
+}
+
+function calculatePersonsNewPositions() {
+    let newUsedPositions = getNewEmptyInsideBoardValues(rows, cols)
+    for (let i = personTable.length - 1; i >= 0; i--) {
+        let actualPosition = {row: personTable[i].row, col: personTable[i].col};
+
+        let newPos = tryToFindRandomMove(actualPosition, newUsedPositions);
+        personTable[i].row = newPos.row;
+        personTable[i].col = newPos.col;
+        newUsedPositions[newPos.row][newPos.col] = {isUsed: true, state: personTable[i].state}
+    }
+    usedPositions = newUsedPositions
 }
 
 function tryToFindRandomMove(actualPosition, newUsedPositions) {
     let pRow = actualPosition.row;
     let pCol = actualPosition.col;
-
-    let minRow = Math.max(pRow - 1, 0);
-    let maxRow = Math.min(pRow + 1, rows - 1);
-
-    let minCol = Math.max(pCol - 1, 0);
-    let maxCol = Math.min(pCol + 1, cols - 1);
-
+    let minRow = Math.max(pRow - 1, 1);
+    let maxRow = Math.min(pRow + 1, rows - 2);
+    let minCol = Math.max(pCol - 1, 1);
+    let maxCol = Math.min(pCol + 1, cols - 2);
     let newPositions = [];
+
     for (let row = minRow; row <= maxRow; row++) {
         for (let col = minCol; col <= maxCol; col++) {
-            let posValue = roomValues[row][col];
-            if ((row !== pRow && col !== pCol) && posValue >= 0 && usedPositions[row][col] !== 1 && newUsedPositions[row][col] !== 1) {
+            if ((row !== pRow && col !== pCol) && !usedPositions[row][col].isUsed && !newUsedPositions[row][col].isUsed) {
                 newPositions.push({row: row, col: col});
             }
         }
@@ -253,15 +330,6 @@ function tryToFindRandomMove(actualPosition, newUsedPositions) {
         return newPositions[getRandomInt(newPositions.length)];
     } else {
         return actualPosition;
-    }
-}
-
-function checkPosition(row, col, actualValue, newUsedPositions) {
-    let posValue = roomValues[row][col];
-    if (posValue < actualValue && posValue >= 0 && usedPositions[row][col] !== 1 && newUsedPositions[row][col] !== 1) {
-        return {row: row, col: col, val: posValue};
-    } else {
-        return null;
     }
 }
 
@@ -380,6 +448,10 @@ function updateChart() {
             }
         });
     }
+}
+
+function getRandomBooleanForPercent(percent) {
+    return getRandomInt(100) < percent;
 }
 
 function getRandomInt(max) {
