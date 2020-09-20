@@ -21,6 +21,7 @@ let alphaFactor;
 let betaFactor;
 let gammaFactor;
 let numberOfSteps = 0;
+let countOfInfected;
 
 window.onload = function () {
     canvas = document.getElementById("board");
@@ -80,10 +81,8 @@ function getRectColor(rectValue) {
 function initPersons() {
     personTable = [];
     usedPositions = getNewEmptyInsideBoardValues(rows, cols)
-
     let freePositions = getFreePositions();
     maxPersonsInside = freePositions.length;
-    document.getElementById('personsSlider').max = maxPersonsInside;
     let numberOfPersons = Math.min(startPersonsNumber, maxPersonsInside);
 
     for (let i = 0; i < numberOfPersons; i++) {
@@ -94,6 +93,8 @@ function initPersons() {
         personTable.push(person);
         usedPositions[person.row][person.col] = {isUsed: true, state: 0}
     }
+    document.getElementById('personsSlider').max = maxPersonsInside;
+    document.getElementById('infectedSlider').max = personTable.length;
     initInfectedPersons();
     updatePersons();
 }
@@ -124,16 +125,19 @@ function getFreePositions() {
 }
 
 function initInfectedPersons() {
-    let count = 1; // TODO value taken from global variable from slider "countOfInfected"
+    let count = countOfInfected;
     for (let i = 0; i < personTable.length; i++) {
-        if (count === 0) {
-            return
-        }
-        count--
         let person = personTable[i]
-        person.state = 1
-        person.stateSteps = 1
-        usedPositions[person.row][person.col] = {isUsed: true, state: 1}
+        if (count <= 0) {
+            person.state = 0
+            person.stateSteps = 0
+            usedPositions[person.row][person.col] = {isUsed: true, state: 0}
+        } else {
+            count--
+            person.state = 1
+            person.stateSteps = 1
+            usedPositions[person.row][person.col] = {isUsed: true, state: 1}
+        }
     }
 }
 
@@ -170,7 +174,9 @@ function getColorForPerson(state) {
 
 function initListeners() {
     startPersonsNumber = document.getElementById('personsSlider').value;
+    countOfInfected = document.getElementById('infectedSlider').value;
     document.getElementById('personsSlider').max = maxPersonsInside;
+    document.getElementById('infectedSlider').max = maxPersonsInside;
     stepTime = document.getElementById('stepTimeSlider').value;
     alphaFactor = document.getElementById('alphaFactorSlider').value;
     betaFactor = document.getElementById('betaFactorSlider').value;
@@ -180,6 +186,9 @@ function initListeners() {
 
     document.getElementById('personsSlider').addEventListener("input", function () {
         updateStartPersonsNumber();
+    });
+    document.getElementById('infectedSlider').addEventListener("input", function () {
+        updateInfectedPersonsNumber();
     });
     document.getElementById('squareSizeSlider').addEventListener("input", function () {
         updateSquareSize();
@@ -211,7 +220,6 @@ function step() {
     }
 }
 
-// TODO another end of simulation - everyone is recovered
 function checkEndOfSimulation() {
     if (isNoInfectedOrSick()) {
         pause();
@@ -381,6 +389,7 @@ function pause() {
 
 function initSlidersLabels() {
     document.getElementById('startNumberOfPeopleLabel').innerHTML = "Start number of people: " + document.getElementById('personsSlider').value;
+    document.getElementById('startNumberOfInfectedLabel').innerHTML = "Start number of people: " + document.getElementById('infectedSlider').value;
     document.getElementById('squareSizeLabel').innerHTML = "Square size: " + document.getElementById('squareSizeSlider').value;
     document.getElementById('stepTimeLabel').innerHTML = "Step time: " + document.getElementById('stepTimeSlider').value;
     document.getElementById('alphaFactorLabel').innerHTML = document.getElementById('alphaFactorLabel').innerHTML + document.getElementById('alphaFactorSlider').value + " %";
@@ -394,6 +403,16 @@ function updateStartPersonsNumber() {
         document.getElementById('startNumberOfPeopleLabel').innerHTML = "Start number of people: " + startPersonsNumber;
         updateViewedNumbers();
         initPersons();
+    }
+}
+
+function updateInfectedPersonsNumber() {
+    if (areListenersEnabled) {
+        countOfInfected = document.getElementById('infectedSlider').value;
+        document.getElementById('startNumberOfInfectedLabel').innerHTML = "Start number of infected: " + countOfInfected;
+        updateViewedNumbers();
+        initInfectedPersons();
+        updatePersons();
     }
 }
 
@@ -430,6 +449,7 @@ function updateGammaFactor() {
     document.getElementById('gammaFactorLabel').innerHTML = "Gamma factor (sick -> recovered): " + gammaFactor + " %";
 }
 
+// TODO proper numbers after html is made
 function updateViewedNumbers() {
     numberOfSurvivors = 0;
     document.getElementById("peopleThatEscaped").innerHTML = '' + numberOfSurvivors;
